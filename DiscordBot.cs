@@ -8,36 +8,37 @@ using System.Threading.Tasks;
 
 namespace FloatChat;
 
-class DiscordBot(ChatForm chatForm) {
+public class DiscordBot(ChatForm chatForm) {
+
+	public DiscordSocketClient Client { get; private set; }
 
 	private readonly ChatForm chatForm = chatForm;
-	public DiscordSocketClient bot;
 
 	public async Task Run() {
-		bot = new DiscordSocketClient(new DiscordSocketConfig {
+		Client = new DiscordSocketClient(new DiscordSocketConfig {
 			LogLevel = LogSeverity.Debug,
 			GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.MessageContent,
 		});
-		bot.Log += Log;
-		bot.MessageReceived += OnMessage;
-		bot.Ready += OnReady;
-		await bot.LoginAsync(TokenType.Bot, (string) Program.configHandler.data["botToken"]);
-		await bot.StartAsync();
+		Client.Log += Log;
+		Client.MessageReceived += OnMessage;
+		Client.Ready += OnReady;
+		await Client.LoginAsync(TokenType.Bot, (string) Program.ConfigHandler.Data["botToken"]);
+		await Client.StartAsync();
 		await Task.Delay(-1);
 	}
 
 	private void ProcessMessage(IMessage message) {
 		string timestamp = message.Timestamp.ToLocalTime().ToString("h:mm tt");
-		if (message.Author.Id == bot.CurrentUser.Id) {
-			chatForm.AddMessage("[" + timestamp + "] " + message.Content);
+		if (message.Author.Id == Client.CurrentUser.Id) {
+			chatForm.AddMessage($"[{timestamp}] {message.Content}");
 		} else {
-			chatForm.AddMessage("[" + timestamp + "] " + message.Author.Username + ": " + message.Content);
+			chatForm.AddMessage($"[{timestamp}] {message.Author.Username}: {message.Content}");
 		}
 	}
 
 	private async Task OnReady() {
 		chatForm.OnBotReady();
-		ITextChannel channel = (ITextChannel) bot.GetChannel((ulong) Program.configHandler.data["channelID"]);
+		ITextChannel channel = (ITextChannel) Client.GetChannel((ulong) Program.ConfigHandler.Data["channelId"]);
 		IEnumerable<IMessage> messages = await channel.GetMessagesAsync(100).FlattenAsync();
 		foreach (IMessage message in messages.Reverse()) {
 			ProcessMessage(message);
@@ -45,7 +46,7 @@ class DiscordBot(ChatForm chatForm) {
 	}
 
 	private Task OnMessage(IMessage message) {
-		if (message.Channel.Id == (ulong) Program.configHandler.data["channelID"]) {
+		if (message.Channel.Id == (ulong) Program.ConfigHandler.Data["channelId"]) {
 			ProcessMessage(message);
 		}
 		return Task.CompletedTask;

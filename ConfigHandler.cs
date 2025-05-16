@@ -7,87 +7,82 @@ using System.Windows.Forms;
 
 namespace FloatChat;
 
-class ConfigHandler {
+public class ConfigHandler {
 
-	public string appDataPath;
-	public string configDirectory;
-	public string configFile;
-	public dynamic data;
+	public dynamic Data { get; private set; }
+	public string ConfigFilePath { get; private set; }
+
+	private readonly string appDataPath;
+	private readonly string configDirectoryPath;
+	private readonly Dictionary<string, dynamic> defaultSettings = new() {
+		{ "botToken", "" },
+		{ "channelId", 0 },
+		{ "nick", "" },
+		{ "processName", "" },
+		{ "alwaysShowInProcess", false },
+		{ "hideTimer", 10 },
+		{ "newMessageHideTimer", 10 },
+		{ "sizeX", 500 },
+		{ "sizeY", 250 },
+		{ "locationX", 25 },
+		{ "locationY", Screen.PrimaryScreen.Bounds.Bottom - 550 },
+		{ "activeOpacity", 0.75 },
+		{ "inactiveOpacity", 0.5 },
+		{ "chatBoxFont", "" },
+		{ "chatBoxFontSize", 15 },
+		{ "inputBoxFont", "" },
+		{ "inputBoxFontSize", 15 }
+	};
 
 	public ConfigHandler() {
 		appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-		configDirectory = appDataPath + "\\" + Program.appName;
-		configFile = configDirectory + "\\" + Program.appName + ".json";
-		if (!Directory.Exists(configDirectory)) {
-			Directory.CreateDirectory(configDirectory);
+		configDirectoryPath = Path.Join(appDataPath, Program.Name);
+		if (!Directory.Exists(configDirectoryPath)) {
+			Directory.CreateDirectory(configDirectoryPath);
 		}
-		if (!File.Exists(configFile)) {
-			File.Create(configFile).Dispose();
+		ConfigFilePath = Path.Join(configDirectoryPath, "config.json");
+		if (!File.Exists(ConfigFilePath)) {
+			File.Create(ConfigFilePath).Dispose();
 		}
 		LoadConfig();
 	}
 
 	public void LoadConfig() {
 		try {
-			string configContent = File.ReadAllText(configFile);
+			string configContent = File.ReadAllText(ConfigFilePath);
 			if (string.IsNullOrEmpty(configContent)) {
 				configContent = "{}";
 			}
-			Dictionary<string, dynamic> defaultSettings = new() {
-				{"botToken", ""},
-				{"channelID", 0},
-				{"nick", ""},
-				{"processName", ""},
-				{"alwaysShowInProcess", false},
-				{"hideTimer", 10},
-				{"newMessageHideTimer", 10},
-				{"sizeX", 500},
-				{"sizeY", 250},
-				{"locationX", 25},
-				{"locationY", Screen.PrimaryScreen.Bounds.Bottom - 550},
-				{"activeOpacity", 0.75},
-				{"inactiveOpacity", 0.5},
-				{"chatBoxFont", ""},
-				{"chatBoxFontSize", 15},
-				{"inputBoxFont", ""},
-				{"inputBoxFontSize", 15}
-			};
-			data = JObject.Parse(configContent);
+			Data = JObject.Parse(configContent);
 			bool save = false;
 			foreach (KeyValuePair<string, dynamic> setting in defaultSettings) {
-				if (data[setting.Key] == null) {
+				if (Data[setting.Key] == null) {
 					save = true;
-					data[setting.Key] = JToken.FromObject(setting.Value);
+					Data[setting.Key] = setting.Value;
 				}
 			}
 			if (save) {
 				SaveConfig();
 			}
 		} catch (Exception e) {
-			Program.Log(e.ToString());
-			if (File.Exists(configFile + ".old")) {
-				File.Delete(configFile + ".old");
-			}
-			File.Move(configFile, configFile + ".old");
-			File.Create(configFile).Dispose();
-			MessageBox.Show("Error parsing the config file. A new one has been created.\r\n\r\n" + e.Message);
-			LoadConfig();
+			MessageBox.Show($"Failed to read the config file\n\n{e}", Program.Name);
+			Environment.Exit(1);
 		}
 	}
 
 	public void SaveConfig() {
 		try {
-			File.WriteAllText(configFile, "");
-			using FileStream file = File.OpenWrite(configFile);
+			File.WriteAllText(ConfigFilePath, "");
+			using FileStream file = File.OpenWrite(ConfigFilePath);
 			using StreamWriter writer = new(file);
 			using JsonTextWriter jsonTextWriter = new(writer) {
 				Formatting = Formatting.Indented,
 				Indentation = 1,
 				IndentChar = '\t'
 			};
-			new JsonSerializer().Serialize(jsonTextWriter, data);
+			new JsonSerializer().Serialize(jsonTextWriter, Data);
 		} catch (Exception e) {
-			Program.Log(e.ToString());
+			MessageBox.Show($"Failed to write to the config file\n\n{e}", Program.Name);
 		}
 	}
 

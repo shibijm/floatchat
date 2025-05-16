@@ -8,7 +8,9 @@ using System.Windows.Forms;
 
 namespace FloatChat;
 
-partial class ChatForm : Form {
+public partial class ChatForm : Form {
+
+	delegate void WinEventDelegate(IntPtr hWinEventHook, uint eventType, IntPtr hWnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
 
 	[DllImport("user32.dll")]
 	private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
@@ -25,8 +27,6 @@ partial class ChatForm : Form {
 	[DllImport("gdi32.dll")]
 	private static extern IntPtr AddFontMemResourceEx(IntPtr pbFont, uint cbFont, IntPtr pdv, [In] ref uint pcFonts);
 
-	delegate void WinEventDelegate(IntPtr hWinEventHook, uint eventType, IntPtr hWnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
-
 	private readonly int oldWindowLong;
 	private bool clickThrough = false;
 	private readonly WinEventDelegate winEventDelegate;
@@ -40,28 +40,26 @@ partial class ChatForm : Form {
 	private double inactiveOpacity;
 	// private PrivateFontCollection privateFontCollection;
 
-	private static string GetActiveWindowProcessName() {
-		IntPtr hWnd = GetForegroundWindow();
-		GetWindowThreadProcessId(hWnd, out uint pid);
-		Process p = Process.GetProcessById((int) pid);
-		return p.ProcessName;
-	}
-
 	public ChatForm() {
 		InitializeComponent();
-		string currentProcess = Process.GetCurrentProcess().ProcessName;
-		Process[] processes = Process.GetProcessesByName(currentProcess);
-		int currentID = Process.GetCurrentProcess().SessionId;
-		Process[] currentUserProcesses = [.. processes.Where(p => p.SessionId == currentID)];
-		if (currentUserProcesses.Length > 1) {
-			MessageBox.Show("FloatChat is already running");
-			Environment.Exit(0);
+		Process currentProcess = Process.GetCurrentProcess();
+		Process[] otherProcesses = [.. Process.GetProcessesByName(currentProcess.ProcessName).Where(p => p.Id != currentProcess.Id)];
+		if (otherProcesses.Length > 0) {
+			MessageBox.Show($"{Program.Name} is already running", Program.Name);
+			Environment.Exit(1);
 		}
 		notifyIcon.Visible = true;
 		oldWindowLong = GetWindowLong(Handle, -20);
 		winEventDelegate = new WinEventDelegate(WinEventProc);
 		IntPtr eventHook = SetWinEventHook(3, 3, IntPtr.Zero, winEventDelegate, 0, 0, 0);
 		StartBot();
+	}
+
+	private static string GetActiveWindowProcessName() {
+		IntPtr hWnd = GetForegroundWindow();
+		GetWindowThreadProcessId(hWnd, out uint pid);
+		Process p = Process.GetProcessById((int) pid);
+		return p.ProcessName;
 	}
 
 	private async void StartBot() {
@@ -74,7 +72,7 @@ partial class ChatForm : Form {
 	}
 
 	private void ChatForm_Load(object sender, EventArgs e) {
-		Opacity = (double) Program.configHandler.data["activeOpacity"];
+		Opacity = (double) Program.ConfigHandler.Data["activeOpacity"];
 		/* privateFontCollection = new PrivateFontCollection();
 		byte[] fontData = Properties.Resources.BurbankBigRegular_Medium;
 		IntPtr data = Marshal.AllocCoTaskMem(fontData.Length);
@@ -87,21 +85,21 @@ partial class ChatForm : Form {
 	}
 
 	private void ApplySettings() {
-		activeOpacity = (double) Program.configHandler.data["activeOpacity"];
-		inactiveOpacity = (double) Program.configHandler.data["inactiveOpacity"];
-		Location = new Point((int) Program.configHandler.data["locationX"], (int) Program.configHandler.data["locationY"]);
-		Width = (int) Program.configHandler.data["sizeX"];
-		Height = (int) Program.configHandler.data["sizeY"];
-		int chatBoxFontSize = (int) Program.configHandler.data["chatBoxFontSize"];
-		string chatBoxFont = (string) Program.configHandler.data["chatBoxFont"];
+		activeOpacity = (double) Program.ConfigHandler.Data["activeOpacity"];
+		inactiveOpacity = (double) Program.ConfigHandler.Data["inactiveOpacity"];
+		Location = new Point((int) Program.ConfigHandler.Data["locationX"], (int) Program.ConfigHandler.Data["locationY"]);
+		Width = (int) Program.ConfigHandler.Data["sizeX"];
+		Height = (int) Program.ConfigHandler.Data["sizeY"];
+		int chatBoxFontSize = (int) Program.ConfigHandler.Data["chatBoxFontSize"];
+		string chatBoxFont = (string) Program.ConfigHandler.Data["chatBoxFont"];
 		if (string.IsNullOrEmpty(chatBoxFont)) {
 			// chatBox.Font = new Font(privateFontCollection.Families[0], chatBoxFontSize);
 			// chatBox.Font = new Font(privateFontCollection.Families[0], chatBoxFontSize);
 		} else {
 			chatBox.Font = new Font(chatBoxFont, chatBoxFontSize);
 		}
-		int inputBoxFontSize = (int) Program.configHandler.data["inputBoxFontSize"];
-		string inputBoxFont = (string) Program.configHandler.data["inputBoxFontStr"];
+		int inputBoxFontSize = (int) Program.ConfigHandler.Data["inputBoxFontSize"];
+		string inputBoxFont = (string) Program.ConfigHandler.Data["inputBoxFontStr"];
 		if (string.IsNullOrEmpty(inputBoxFont)) {
 			// inputBox.Font = new Font(privateFontCollection.Families[0], inputBoxFontSize);
 		} else {
@@ -140,19 +138,20 @@ partial class ChatForm : Form {
 			chatBox.SelectionStart = chatBox.Text.Length;
 			chatBox.ScrollToCaret();
 			if (clickThrough) {
-				StartHideTimer((int) Program.configHandler.data["newMessageHideTimer"]);
+				StartHideTimer((int) Program.ConfigHandler.Data["newMessageHideTimer"]);
 				Opacity = inactiveOpacity;
 				newMessage = true;
 			}
 		}
 	}
 
-	private void RichTextBox1_LinkClicked(object sender, LinkClickedEventArgs e) {
+	private void ChatBox_LinkClicked(object sender, LinkClickedEventArgs e) {
 		inputBox.Focus();
-		Process.Start(e.LinkText);
+		ProcessStartInfo startInfo = new(e.LinkText) { UseShellExecute = true };
+		Process.Start(startInfo);
 	}
 
-	private void TextBox1_KeyDown(object sender, KeyEventArgs e) {
+	private void InputBox_KeyDown(object sender, KeyEventArgs e) {
 		if (e.KeyCode == Keys.Enter) {
 			string text = inputBox.Text.Trim();
 			inputBox.Text = "";
@@ -161,15 +160,15 @@ partial class ChatForm : Form {
 				string[] textSplit = text.Split(' ');
 				if (textSplit[0] == "/nick") {
 					if (textSplit.Length > 1) {
-						Program.configHandler.data["nick"] = textSplit[1].Trim();
-						Program.configHandler.SaveConfig();
+						Program.ConfigHandler.Data["nick"] = textSplit[1].Trim();
+						Program.ConfigHandler.SaveConfig();
 						AddMessage("Your nick has been changed to \"" + textSplit[1].Trim() + "\"");
 					} else {
 						AddMessage("Syntax: /nick <nick>");
 					}
 				} else {
-					ITextChannel channel = (ITextChannel) bot.bot.GetChannel((ulong) Program.configHandler.data["channelID"]);
-					channel.SendMessageAsync((string) Program.configHandler.data["nick"] + ": " + text);
+					ITextChannel channel = (ITextChannel) bot.Client.GetChannel((ulong) Program.ConfigHandler.Data["channelId"]);
+					channel.SendMessageAsync((string) Program.ConfigHandler.Data["nick"] + ": " + text);
 				}
 			}
 		} else if (e.KeyCode == Keys.Escape) {
@@ -180,9 +179,9 @@ partial class ChatForm : Form {
 
 	private void WinEventProc(IntPtr hWinEventHook, uint eventType, IntPtr hWnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime) {
 		string processName = GetActiveWindowProcessName();
-		string targetProcessName = (string) Program.configHandler.data["processName"];
+		string targetProcessName = (string) Program.ConfigHandler.Data["processName"];
 		if (processName == targetProcessName || targetProcessName == "*") {
-			if (lastProcess == Process.GetCurrentProcess().ProcessName || (bool) Program.configHandler.data["alwaysShowInProcess"]) {
+			if (lastProcess == Process.GetCurrentProcess().ProcessName || (bool) Program.ConfigHandler.Data["alwaysShowInProcess"]) {
 				ChatForm_Deactivate(null, null);
 			}
 		} else if (processName == Process.GetCurrentProcess().ProcessName) {
@@ -226,7 +225,7 @@ partial class ChatForm : Form {
 
 	private void StartHideTimer(int hideTimerInterval = -2) {
 		if (hideTimerInterval == -2) {
-			hideTimerInterval = (int) Program.configHandler.data["hideTimer"];
+			hideTimerInterval = (int) Program.ConfigHandler.Data["hideTimer"];
 		}
 		if (hideTimerInterval >= 0) {
 			StopHideTimer();
@@ -241,25 +240,22 @@ partial class ChatForm : Form {
 		string processName = GetActiveWindowProcessName();
 		hideTimer.Enabled = false;
 		newMessage = false;
-		if ((processName != (string) Program.configHandler.data["processName"] && processName != "*") || (bool) Program.configHandler.data["alwaysShowInProcess"] == false) {
+		if ((processName != (string) Program.ConfigHandler.Data["processName"] && processName != "*") || (bool) Program.ConfigHandler.Data["alwaysShowInProcess"] == false) {
 			Opacity = 0D;
 		}
 	}
 
-	private void NotifyIcon1_DoubleClick(object sender, EventArgs e) {
+	private void NotifyIcon_DoubleClick(object sender, EventArgs e) {
 		Activate();
 	}
 
-	private void RefreshSettingsToolStripMenuItem_Click(object sender, EventArgs e) {
-		Program.configHandler.LoadConfig();
+	private void ReloadSettingsToolStripMenuItem_Click(object sender, EventArgs e) {
+		Program.ConfigHandler.LoadConfig();
 		ApplySettings();
 	}
 
-	private void SettingsToolStripMenuItem_Click(object sender, EventArgs e) {
-		ProcessStartInfo startInfo = new("code") {
-			Arguments = Program.configHandler.configFile,
-			UseShellExecute = true,
-		};
+	private void OpenSettingsToolStripMenuItem_Click(object sender, EventArgs e) {
+		ProcessStartInfo startInfo = new(Program.ConfigHandler.ConfigFilePath) { UseShellExecute = true };
 		Process.Start(startInfo);
 	}
 

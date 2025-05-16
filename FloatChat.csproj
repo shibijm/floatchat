@@ -4,7 +4,7 @@
 		<TargetFramework>net9.0-windows</TargetFramework>
 		<OutputType>WinExe</OutputType>
 		<DebugType>embedded</DebugType>
-		<ApplicationIcon>Resources\icon.ico</ApplicationIcon>
+		<ApplicationIcon>assets\icon.ico</ApplicationIcon>
 		<Authors>Shibi J M</Authors>
 		<Copyright>© 2018-2025 $(Authors)</Copyright>
 		<Version>0.1.0</Version>
@@ -25,7 +25,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Discord.Net" Version="3.9.0"/>
+		<PackageReference Include="Discord.Net" Version="3.9.0" />
 	</ItemGroup>
 
 </Project>

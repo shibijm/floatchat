@@ -29,14 +29,14 @@
 			inputBox = new System.Windows.Forms.TextBox();
 			notifyIcon = new System.Windows.Forms.NotifyIcon(components);
 			contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(components);
-			refreshSettingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			openSettingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			reloadSettingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			toolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
 			exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			contextMenuStrip.SuspendLayout();
 			SuspendLayout();
 			// 
-			// richTextBox1
+			// chatBox
 			// 
 			chatBox.BackColor = System.Drawing.Color.Black;
 			chatBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
@@ -44,15 +44,15 @@
 			chatBox.ForeColor = System.Drawing.Color.White;
 			chatBox.Location = new System.Drawing.Point(14, 14);
 			chatBox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			chatBox.Name = "richTextBox1";
+			chatBox.Name = "chatBox";
 			chatBox.ReadOnly = true;
 			chatBox.Size = new System.Drawing.Size(555, 228);
 			chatBox.TabIndex = 0;
 			chatBox.TabStop = false;
 			chatBox.Text = "";
-			chatBox.LinkClicked += RichTextBox1_LinkClicked;
+			chatBox.LinkClicked += ChatBox_LinkClicked;
 			// 
-			// textBox1
+			// inputBox
 			// 
 			inputBox.BackColor = System.Drawing.Color.Black;
 			inputBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
@@ -61,47 +61,47 @@
 			inputBox.ForeColor = System.Drawing.Color.White;
 			inputBox.Location = new System.Drawing.Point(14, 249);
 			inputBox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-			inputBox.Name = "textBox1";
+			inputBox.Name = "inputBox";
 			inputBox.Size = new System.Drawing.Size(555, 22);
 			inputBox.TabIndex = 1;
-			inputBox.KeyDown += TextBox1_KeyDown;
+			inputBox.KeyDown += InputBox_KeyDown;
 			// 
-			// notifyIcon1
+			// notifyIcon
 			// 
 			notifyIcon.ContextMenuStrip = contextMenuStrip;
-			notifyIcon.Icon = (System.Drawing.Icon) resources.GetObject("notifyIcon1.Icon");
+			notifyIcon.Icon = (System.Drawing.Icon) resources.GetObject("notifyIcon.Icon");
 			notifyIcon.Text = "FloatChat";
-			notifyIcon.DoubleClick += NotifyIcon1_DoubleClick;
+			notifyIcon.DoubleClick += NotifyIcon_DoubleClick;
 			// 
-			// contextMenuStrip1
+			// contextMenuStrip
 			// 
-			contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { refreshSettingsToolStripMenuItem, settingsToolStripMenuItem, toolStripSeparator, exitToolStripMenuItem });
-			contextMenuStrip.Name = "contextMenuStrip1";
-			contextMenuStrip.Size = new System.Drawing.Size(159, 76);
+			contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { openSettingsToolStripMenuItem, reloadSettingsToolStripMenuItem, toolStripSeparator, exitToolStripMenuItem });
+			contextMenuStrip.Name = "contextMenuStrip";
+			contextMenuStrip.Size = new System.Drawing.Size(156, 76);
 			// 
-			// refreshSettingsToolStripMenuItem
+			// openSettingsToolStripMenuItem
 			// 
-			refreshSettingsToolStripMenuItem.Name = "refreshSettingsToolStripMenuItem";
-			refreshSettingsToolStripMenuItem.Size = new System.Drawing.Size(158, 22);
-			refreshSettingsToolStripMenuItem.Text = "Refresh Settings";
-			refreshSettingsToolStripMenuItem.Click += RefreshSettingsToolStripMenuItem_Click;
+			openSettingsToolStripMenuItem.Name = "openSettingsToolStripMenuItem";
+			openSettingsToolStripMenuItem.Size = new System.Drawing.Size(155, 22);
+			openSettingsToolStripMenuItem.Text = "Open Settings";
+			openSettingsToolStripMenuItem.Click += OpenSettingsToolStripMenuItem_Click;
 			// 
-			// settingsToolStripMenuItem
+			// reloadSettingsToolStripMenuItem
 			// 
-			settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
-			settingsToolStripMenuItem.Size = new System.Drawing.Size(158, 22);
-			settingsToolStripMenuItem.Text = "Settings";
-			settingsToolStripMenuItem.Click += SettingsToolStripMenuItem_Click;
+			reloadSettingsToolStripMenuItem.Name = "reloadSettingsToolStripMenuItem";
+			reloadSettingsToolStripMenuItem.Size = new System.Drawing.Size(155, 22);
+			reloadSettingsToolStripMenuItem.Text = "Reload Settings";
+			reloadSettingsToolStripMenuItem.Click += ReloadSettingsToolStripMenuItem_Click;
 			// 
-			// toolStripMenuItem1
+			// toolStripSeparator
 			// 
-			toolStripSeparator.Name = "toolStripMenuItem1";
-			toolStripSeparator.Size = new System.Drawing.Size(155, 6);
+			toolStripSeparator.Name = "toolStripSeparator";
+			toolStripSeparator.Size = new System.Drawing.Size(152, 6);
 			// 
 			// exitToolStripMenuItem
 			// 
 			exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-			exitToolStripMenuItem.Size = new System.Drawing.Size(158, 22);
+			exitToolStripMenuItem.Size = new System.Drawing.Size(155, 22);
 			exitToolStripMenuItem.Text = "Exit";
 			exitToolStripMenuItem.Click += ExitToolStripMenuItem_Click;
 			// 
@@ -140,8 +140,8 @@
 		private System.Windows.Forms.NotifyIcon notifyIcon;
 		private System.Windows.Forms.ContextMenuStrip contextMenuStrip;
 		private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
-		private System.Windows.Forms.ToolStripMenuItem settingsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem openSettingsToolStripMenuItem;
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator;
-		private System.Windows.Forms.ToolStripMenuItem refreshSettingsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem reloadSettingsToolStripMenuItem;
 	}
 }
